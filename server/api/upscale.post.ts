@@ -9,9 +9,9 @@ export default defineEventHandler(async (event) => {
   const { ws_key, input } = body
 
   const prediction = await replicate.predictions.create({
-    version: 'c28b92a7ecd66eee4aefcd8a94eb9e7f6c3805d5f06038165407fb5cb355ba67',
+    version: '499940604f95b416c3939423df5c64a5c95cfd32b464d755dacfe2192a2de7ef',
     input,
-    webhook: `https://r3swiuknhh.execute-api.eu-west-1.amazonaws.com/prod/webhook?key=${ws_key}`,
+    webhook: `https://r3swiuknhh.execute-api.eu-west-1.amazonaws.com/prod/webhook?key=${ws_key}&type=upscale`,
     webhook_events_filter: ['start', 'output', 'logs', 'completed']
   })
 

@@ -1,6 +1,14 @@
 <template lang="pug">
 main
   #container
+  #input
+    input(
+      v-model="prompt"
+      type="text"
+    )
+    button(
+      @click="submit"
+    ) Submit
 </template>
 
 <script>
@@ -8,10 +16,32 @@ import * as THREE from 'three'
 import { mapActions } from 'pinia'
 
 import useAppStore from '@/stores/app'
+import { EventBus } from '@/services'
 
 export default {
   name: 'App',
-  methods: mapActions(useAppStore, ['init']),
+  data: () => ({
+    prompt: 'a wooden house'
+  }),
+  methods: {
+    ...mapActions(useAppStore, ['init', 'createImage', 'createUpscale']),
+    async submit() {
+      try {
+        await this.createImage({
+          input: {
+            prompt: `360 degree equirectangular panorama photograph, ${this.prompt}, trending on artstation, 4k`,
+            width: 1024,
+            height: 512,
+            num_outputs: 1,
+            num_inference_steps: 20,
+            guidance_scale: 7.5
+          }
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    }
+  },
   mounted() {
     this.init()
 
@@ -26,13 +56,13 @@ export default {
     let onPointerDownPointerX = 0
     let onPointerDownPointerY = 0
     let lon = 0
-    let onMouseDownLon = 0
     let onPointerDownLon = 0
     let lat = 0
-    let onMouseDownLat = 0
     let onPointerDownLat = 0
     let phi = 0
     let theta = 0
+
+    const container = document.getElementById('container')
 
     // Init scene, camera and geometry
     scene = new THREE.Scene()
@@ -61,7 +91,7 @@ export default {
     renderer = new THREE.WebGLRenderer()
     renderer.setPixelRatio(window.devicePixelRatio)
     renderer.setSize(window.innerWidth, window.innerHeight)
-    document.getElementById('container').appendChild(renderer.domElement)
+    container.appendChild(renderer.domElement)
 
     // Create event handlers
     const onDocumentMouseDown = (event) => {
@@ -123,14 +153,14 @@ export default {
     }
 
     // Add event listeners
-    document.addEventListener('mousedown', onDocumentMouseDown, false)
-    document.addEventListener('mousemove', onDocumentMouseMove, false)
-    document.addEventListener('mouseup', onDocumentMouseUp, false)
-    document.addEventListener('wheel', onDocumentMouseWheel, false)
-    document.addEventListener('dragover', onDocumentDragOver, false)
-    document.addEventListener('dragenter', onDocumentDragEnter, false)
-    document.addEventListener('dragleave', onDocumentDragLeave, false)
-    document.addEventListener('drop', onDocumentDrop, false)
+    container.addEventListener('mousedown', onDocumentMouseDown, false)
+    container.addEventListener('mousemove', onDocumentMouseMove, false)
+    container.addEventListener('mouseup', onDocumentMouseUp, false)
+    container.addEventListener('wheel', onDocumentMouseWheel, false)
+    container.addEventListener('dragover', onDocumentDragOver, false)
+    container.addEventListener('dragenter', onDocumentDragEnter, false)
+    container.addEventListener('dragleave', onDocumentDragLeave, false)
+    container.addEventListener('drop', onDocumentDrop, false)
     window.addEventListener('resize', onWindowResize, false)
 
     // Update function (each frame)
@@ -156,6 +186,71 @@ export default {
     }
 
     animate()
+
+    //...
+    const onImageOutput = async (output) => {
+      try {
+        await this.createUpscale({
+          input: {
+            image: output,
+            scale: 4
+          }
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    const onUpscaleOutput = (output) => {
+      // Pre-load image
+      const image = new Image()
+      image.src = output
+      image.onload = () => {
+        material.map.image.src = output
+        material.map.needsUpdate = true
+      }
+    }
+
+    // Register websocket event handlers
+    EventBus.$on('image:output', onImageOutput)
+    EventBus.$on('upscale:output', onUpscaleOutput)
   }
 }
 </script>
+
+<style lang="stylus" scoped>
+main
+  #container
+    cursor move
+    cursor grab
+    cursor -moz-grab
+    cursor -webkit-grab
+
+    &:active
+      cursor grabbing
+      cursor -moz-grabbing
+      cursor -webkit-grabbing
+
+  #input
+    padding 16px
+    background rgba(0, 0, 0, .4)
+    display flex
+    justify-content center
+    position absolute
+    top 0
+    left 0
+    right 0
+    z-index 100
+
+    input
+      padding 12px
+      background #ffffff
+      border 0
+      border-radius 4px 0 0 4px
+
+    button
+      padding 12px
+      border 0
+      border-radius 0 4px 4px 0
+      cursor pointer
+</style>

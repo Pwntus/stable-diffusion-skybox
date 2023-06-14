@@ -24,10 +24,15 @@ class WS {
   }
 
   onmessage(event) {
-    const { body } = event.data
-    const output = get(body, 'output[0]', null)
+    const { query, body } = event.data
+    const { type } = query
 
-    if (output) EventBus.$emit('prediction:output', output)
+    const output =
+      type === 'image'
+        ? get(body, 'output[0]', null)
+        : get(body, 'output', null)
+
+    if (output) EventBus.$emit(`${type}:output`, output)
   }
 }
 

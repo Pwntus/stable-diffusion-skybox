@@ -26,8 +26,18 @@ export default defineStore('app', {
         throw new Error(`Failed to init app (${e.message})`)
       }
     },
-    async createPrediction(body = null) {
-      const res = await fetch('/api/prediction', {
+    async createImage(body = null) {
+      const res = await fetch('/api/image', {
+        method: 'post',
+        body: JSON.stringify({
+          ws_key: this.ws_key,
+          ...body
+        })
+      })
+      return await res.json()
+    },
+    async createUpscale(body = null) {
+      const res = await fetch('/api/upscale', {
         method: 'post',
         body: JSON.stringify({
           ws_key: this.ws_key,
