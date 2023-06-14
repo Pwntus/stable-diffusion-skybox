@@ -1,0 +1,12 @@
+html,
+body {
+  margin: 0;
+  background-color: #000000;
+  overflow: hidden;
+}
+
+#__nuxt {
+  min-height: 100vh;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetiva Neue,
+    Helvetica, Arial, sans-serif;
+}
