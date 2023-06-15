@@ -2,13 +2,15 @@
 main
   #container
   #input
-    input(
-      v-model="prompt"
-      type="text"
-    )
-    button(
-      @click="submit"
-    ) Submit
+    b(v-if="loading") Loading...
+    template(v-else)
+      input(
+        v-model="prompt"
+        type="text"
+      )
+      button(
+        @click="submit"
+      ) Submit
 </template>
 
 <script>
@@ -21,15 +23,17 @@ import { EventBus } from '@/services'
 export default {
   name: 'App',
   data: () => ({
+    loading: false,
     prompt: 'a wooden house'
   }),
   methods: {
     ...mapActions(useAppStore, ['init', 'createImage', 'createUpscale']),
     async submit() {
+      this.loading = true
       try {
         await this.createImage({
           input: {
-            prompt: `360 degree equirectangular panorama photograph, ${this.prompt}, trending on artstation, 4k`,
+            prompt: `photo, ${this.prompt}, qxj <lora:360Diffusion_v1:1>`,
             width: 1024,
             height: 512,
             num_outputs: 1,
@@ -208,6 +212,7 @@ export default {
       image.onload = () => {
         material.map.image.src = output
         material.map.needsUpdate = true
+        this.loading = false
       }
     }
 
